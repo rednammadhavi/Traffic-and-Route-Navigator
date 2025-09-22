@@ -1,3 +1,4 @@
+// Frontend/src/components/RouteInfo.jsx
 import React from "react";
 
 function RouteInfo({ routeData }) {
@@ -8,7 +9,8 @@ function RouteInfo({ routeData }) {
             <h2 className="text-lg font-semibold mb-2">Route Info</h2>
             <p>Distance: {routeData.distance}</p>
             <p>Normal Duration: {routeData.duration}</p>
-            <p>With Traffic: {routeData.trafficAdjustedDuration}</p>
+            <p>With Traffic: {routeData.trafficAdjustedDuration || routeData.duration_in_traffic}</p>
+            <p>Summary: {routeData.summary}</p>
         </div>
     );
 }

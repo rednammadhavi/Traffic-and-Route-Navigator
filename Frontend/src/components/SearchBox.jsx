@@ -1,17 +1,37 @@
+// Frontend/src/components/SearchBox.jsx
 import { useState } from "react";
 import axios from "axios";
 
-function SearchBox({ setRouteData }) {
+const makeId = (len = 8) => Math.random().toString(36).slice(2, 2 + len)
+
+function SearchBox({ setRouteData, setRoomId, socket }) {
     const [origin, setOrigin] = useState("");
     const [destination, setDestination] = useState("");
 
     const handleSearch = async () => {
+        const roomId = makeId(10)
+        setRoomId(roomId)
+
+        // join the room first so server emits can reach client immediately
+        if (socket && socket.connected) {
+            socket.emit('joinRouteRoom', roomId)
+        } else if (socket) {
+            socket.connect()
+            socket.on('connect', () => socket.emit('joinRouteRoom', roomId))
+        }
+
         const { data } = await axios.post("/api/routes/find", {
             origin,
             destination,
             mode: "driving",
+            roomId
         });
-        setRouteData(data);
+
+        // server returns initial route payload
+        setRouteData({
+            ...data,
+            roomId
+        });
     };
 
     return (

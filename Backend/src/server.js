@@ -1,23 +1,49 @@
 import dotenv from 'dotenv'
-import connectDB from "./db/index.js"
-import { app } from '../src/app.js'
-
-const port = process.env.PORT || 3000
 
 dotenv.config({
     path: './.env'
 })
 
+import connectDB from "./db/index.js"
+import { app } from './app.js'
+import { createServer } from 'http'
+import { Server as IOServer } from 'socket.io'
+
+const port = process.env.PORT || 5000
+const httpServer = createServer(app)
+
+const io = new IOServer(httpServer, {
+    cors: {
+        origin: process.env.CORS_ORIGIN || '*',
+        methods: ['GET', 'POST']
+    }
+})
+
+app.locals.io = io
+
+io.on('connection', (socket) => {
+    console.log('socket connected', socket.id)
+
+    socket.on('joinRouteRoom', (roomId) => {
+        socket.join(roomId)
+    })
+
+    socket.on('leaveRouteRoom', (roomId) => {
+        socket.leave(roomId)
+    })
+
+    socket.on('disconnect', () => {
+        console.log('socket disconnected', socket.id)
+    })
+})
+
 connectDB()
     .then(() => {
-        app.on('error', (error) => {
-            console.log('Error:', error)
-            throw error
-        })
-        app.listen(port, () => {
-            console.log(`server is listening at port : ${port}`)
+        httpServer.listen(port, () => {
+            console.log(`Server listening on port ${port}`)
         })
     })
     .catch((error) => {
-        console.log('MONGOBD Connection Failed!!', error)
+        console.log('MONGO Connection Failed!!', error)
+        process.exit(1)
     })
